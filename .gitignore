@@ -62,4 +62,5 @@ tests/*.exp
 tests/*.log
 tests/*.sh
 tests/*.mem
+.vscode
 

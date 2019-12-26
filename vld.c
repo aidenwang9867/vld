@@ -22,6 +22,7 @@
 #include "php_vld.h"
 #include "srm_oparray.h"
 #include "php_globals.h"
+#include "sa_oparray.h"
 
 static zend_op_array* (*old_compile_file)(zend_file_handle* file_handle, int type TSRMLS_DC);
 static zend_op_array* vld_compile_file(zend_file_handle*, int TSRMLS_DC);
@@ -74,6 +75,7 @@ PHP_INI_BEGIN()
 	STD_PHP_INI_ENTRY("vld.save_dir",     "/tmp", PHP_INI_SYSTEM, OnUpdateString, save_dir, zend_vld_globals, vld_globals)
 	STD_PHP_INI_ENTRY("vld.save_paths",   "0", PHP_INI_SYSTEM, OnUpdateBool, save_paths,   zend_vld_globals, vld_globals)
 	STD_PHP_INI_ENTRY("vld.dump_paths",   "1", PHP_INI_SYSTEM, OnUpdateBool, dump_paths,   zend_vld_globals, vld_globals)
+	STD_PHP_INI_ENTRY("vld.dump_json",   "0", PHP_INI_SYSTEM, OnUpdateBool, dump_json,   zend_vld_globals, vld_globals)
 PHP_INI_END()
  
 static void vld_init_globals(zend_vld_globals *vg)
@@ -88,6 +90,8 @@ static void vld_init_globals(zend_vld_globals *vg)
 	vg->dump_paths   = 1;
 	vg->save_paths   = 0;
 	vg->verbosity    = 1;
+	vg->dump_json	 = 0;
+	vg->json 		 = cJSON_CreateArray();
 }
 
 
@@ -155,7 +159,16 @@ PHP_RSHUTDOWN_FUNCTION(vld)
 		fprintf(VLD_G(path_dump_file), "}\n");
 		fclose(VLD_G(path_dump_file));
 	}
-
+	if (VLD_G(dump_json)) {
+		cJSON *out = (cJSON *)(VLD_G(json));
+		int num = cJSON_GetArraySize(out);
+		char *pt = cJSON_Print(out);
+		if (pt) {
+			puts(pt);
+		}
+		free(pt);
+		cJSON_Delete(out);
+	}
 	return SUCCESS;
 }
 
@@ -302,10 +315,15 @@ static zend_op_array *vld_compile_file(zend_file_handle *file_handle, int type T
 	if (VLD_G(path_dump_file)) {
 		fprintf(VLD_G(path_dump_file), "subgraph cluster_file_%p { label=\"file %s\";\n", op_array, op_array->filename ? ZSTRING_VALUE(op_array->filename) : "__main");
 	}
-	if (op_array) {
+	if (op_array && !VLD_G(dump_json)) {
 		vld_dump_oparray (op_array TSRMLS_CC);
 	}
-
+	if (VLD_G(dump_json)) {
+		cJSON *func = vld_opa_dump_json(op_array);
+		cJSON *baseJson = VLD_G(json);
+		cJSON_AddItemToArray(baseJson, func);
+	}
+	
 	zend_hash_apply_with_arguments (CG(function_table) TSRMLS_CC, (apply_func_args_t) VLD_WRAP_PHP7(vld_dump_fe), 0);
 	zend_hash_apply (CG(class_table), (apply_func_t) VLD_WRAP_PHP7(vld_dump_cle) TSRMLS_CC);
 

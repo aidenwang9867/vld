@@ -92,6 +92,14 @@ LINK32=link.exe
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=.\cJSON.c
+# End Source File
+# Begin Source File
+
+SOURCE=.\sa_oparray.c
+# End Source File
+# Begin Source File
+
 SOURCE=.\srm_oparray.c
 # End Source File
 # Begin Source File
@@ -102,6 +110,13 @@ SOURCE=.\vld.c
 # Begin Group "Header Files"
 
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
+# Begin Source File
+
+SOURCE=.\cJSON.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\sa_oparray.h
 # Begin Source File
 
 SOURCE=.\php_vld.h
