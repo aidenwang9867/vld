@@ -790,12 +790,12 @@ void vld_get_op_json(int nr, zend_op *op_ptr, unsigned int base_address, cJSON *
         else
         {
             char tmp[128] = {0};
-            sprintf(tmp, "%3d", op.extended_value);
+            sprintf(tmp, "%d", op.extended_value);
             *ops_ext = cJSON_CreateString(tmp);
         }
 #else
         char tmp[128] = {0};
-        sprintf(tmp, "%3d", op.extended_value);
+        sprintf(tmp, "%d", op.extended_value);
         *ops_ext = cJSON_CreateString(tmp);
 #endif
     }
